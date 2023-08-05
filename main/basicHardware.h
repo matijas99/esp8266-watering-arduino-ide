@@ -1,0 +1,107 @@
+#ifndef basicHardware_h
+#define basicHardware_h
+
+#include "Arduino.h"
+#include "MCP23017-SOLDERED.h"
+
+//////////////////////////////////////////////////////////
+// COMPONENT
+//////////////////////////////////////////////////////////
+class Component {
+  protected:
+    String _name;
+
+  public:
+    virtual String toString();
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// PIN
+//////////////////////////////////////////////////////////
+class Pin {
+  protected:
+    uint8_t _pinAddress;
+
+  public:
+    virtual void setPinMode(uint8_t mode);
+    virtual void doDigitalWrite(uint8_t val);
+    virtual int doDigitalRead();
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// PIN NATIVE
+//////////////////////////////////////////////////////////
+class PinNative : public Pin {
+  public:
+    PinNative(uint8_t pinAddress);
+
+    void setPinMode(uint8_t mode);
+    void doDigitalWrite(uint8_t val);
+    int doDigitalRead();
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// PIN EXTENDER
+//////////////////////////////////////////////////////////
+class PinExtender : public Pin {
+  public:
+    PinExtender(MCP_23017* mcp, uint8_t pinAddress);
+    
+    void setPinMode(uint8_t mode);
+    void doDigitalWrite(uint8_t val);
+    int doDigitalRead();
+  
+  private:
+    MCP_23017* _mcp;
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// SWITCH
+//////////////////////////////////////////////////////////
+class Switch : public Component {
+  public:
+    Switch(String name, Pin* pin);
+
+    bool isPressed(); 
+    String toString();
+
+  private:
+    Pin* _pin;
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// STEPPER
+//////////////////////////////////////////////////////////
+class Stepper : public Component {
+  public:
+    static const int stepperFullRotationSteps = 200;
+
+    Stepper(String name, Pin* enablePin,  Pin* stepPin, Pin* directionPin);
+
+    void turnForwardSteps(int steps);
+    void turnBackwardSteps(int steps);
+    void resetPosition();
+    String toString();
+
+  private:
+    Pin* _enablePin;
+    Pin* _directionPin;
+    Pin* _stepPin;
+    int _currentPositionSteps;
+
+    void _turnSteps(int steps);
+};
+//////////////////////////////////////////////////////////
+
+
+#endif

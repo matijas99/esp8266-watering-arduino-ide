@@ -15,9 +15,8 @@
 // Arm arm("Arm", &arm_stepper, &arm_limit);
 // Rail rail("Rail", &rail_stepper, &rail_limit);
 
-#include "wateringHardware.cpp"
 #include "MCP23017-SOLDERED.h"
-#include "pin.cpp"
+#include "basicHardware.h"
 
 MCP_23017 mcp;
 
@@ -34,7 +33,9 @@ void setup() {
     // Pin* pinStep = new PinExtender(mcp, GPA1);
     // Pin* pinDirection = new PinExtender(mcp, GPA2);
     
-    Stepper stepper = Stepper("stepper", pinEnable, pinStep, pinDirection);
+    Stepper* stepper = new Stepper("stepper", pinEnable, pinStep, pinDirection);
+    stepper->turnForwardSteps(1000);
+    stepper->turnBackwardSteps(1000);
 
     // Pin* pin = new PinNative(D5);
 }

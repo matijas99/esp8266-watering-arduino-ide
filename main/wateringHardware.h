@@ -2,6 +2,7 @@
 #define wateringHardware_h
 
 #include <Arduino.h>
+#include "MCP23017-SOLDERED.h"
 #include "basicHardware.h"
 
 //////////////////////////////////////////////////////////
@@ -47,6 +48,23 @@ public:
     Switch* _positionLimit;
     int _stepsPerMillimeter;
     int _currentPositionMillimeters;
+};
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// WATERMAN
+//////////////////////////////////////////////////////////
+class Waterman {
+  public:
+    Waterman();
+    
+    void resetPosition();
+  
+  private:
+    MCP_23017* _mcp;
+    Rail* _rail;
+    Arm* _arm;
 };
 //////////////////////////////////////////////////////////
 

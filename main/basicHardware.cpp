@@ -47,7 +47,7 @@ int PinExtender :: doDigitalRead() {
 Switch :: Switch(String name, Pin* pin) {
   _name = name;
   _pin = pin;
-  _pin->setPinMode(INPUT);
+  _pin->setPinMode(INPUT_PULLUP);
 }
 
 bool Switch :: isPressed() {

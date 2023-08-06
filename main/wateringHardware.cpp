@@ -1,4 +1,5 @@
 #include "Arduino.h"
+#include "MCP23017-SOLDERED.h"
 #include "wateringHardware.h"
 #include "basicHardware.h"
 
@@ -25,9 +26,9 @@ void Arm :: moveToAngle(int newAngleDegrees) {
   int stepsDiff = angleDiff * _stepsPerDegree;
 
   if (stepsDiff > 0) {
-    _rotationStepper->turnBackwardSteps(stepsDiff);
+    _rotationStepper->turnForwardSteps(stepsDiff);
   } else {
-    _rotationStepper->turnForwardSteps(abs(stepsDiff));
+    _rotationStepper->turnBackwardSteps(abs(stepsDiff));
   }
 
   _currentAngleDegrees = newAngleDegrees;
@@ -35,7 +36,7 @@ void Arm :: moveToAngle(int newAngleDegrees) {
 
 void Arm :: resetPosition() {
   while (!_rotationLimit->isPressed()) {
-    _rotationStepper->turnForwardSteps(1);
+    _rotationStepper->turnBackwardSteps(1);
   }
   _rotationStepper->resetPosition();
   _currentAngleDegrees = 0;
@@ -70,9 +71,9 @@ void Rail :: moveToPosition(int newPositionMillimeters) {
   int stepsDiff = positionMillimetersDiff * _stepsPerMillimeter;
 
   if (stepsDiff > 0) {
-    _positionStepper->turnBackwardSteps(stepsDiff);
+    _positionStepper->turnForwardSteps(stepsDiff);
   } else {
-    _positionStepper->turnForwardSteps(abs(stepsDiff));
+    _positionStepper->turnBackwardSteps(abs(stepsDiff));
   }
 
   _currentPositionMillimeters = newPositionMillimeters;
@@ -80,7 +81,7 @@ void Rail :: moveToPosition(int newPositionMillimeters) {
 
 void Rail :: resetPosition() {
   while (!_positionLimit->isPressed()) {
-    _positionStepper->turnForwardSteps(1);
+    _positionStepper->turnBackwardSteps(1);
   }
   _positionStepper->resetPosition();
   _currentPositionMillimeters = 0;
@@ -90,5 +91,51 @@ String Rail :: toString() {
   return "[RAIL " + _name + "] position millimeters: " + String(_currentPositionMillimeters);
 }
 
+//////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////
+// WATERMAN
+//////////////////////////////////////////////////////////
+Waterman :: Waterman() {
+  
+  _mcp = new MCP_23017();
+  _mcp->begin();
+
+  Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
+  Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
+  Pin* pinDirectionPositionStepper = new PinExtender(_mcp, GPB2);
+  Stepper* positionStepper = new Stepper("positionStepper", pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper);
+  
+  Pin* pinPositionLimit = new PinExtender(_mcp, GPB3);
+  Switch* positionLimit = new Switch("positionLimit", pinPositionLimit);
+  _rail = new Rail("rail", positionStepper, positionLimit);
+
+  Pin* pinEnableRotationStepper = new PinExtender(_mcp, GPA0);
+  Pin* pinStepRotationStepper = new PinExtender(_mcp, GPA1);
+  Pin* pinDirectionRotationStepper = new PinExtender(_mcp, GPA2);
+  Stepper* rotationStepper = new Stepper("positionStepper", pinEnableRotationStepper, pinStepRotationStepper, pinDirectionRotationStepper);
+
+  Pin* pinRotationLimit = new PinExtender(_mcp, GPA3);
+  Switch* rotationLimit = new Switch("rotationLimit", pinRotationLimit);
+  _arm = new Arm("arm", rotationStepper, rotationLimit);
+}
+
+void Waterman :: resetPosition() {
+  _arm->resetPosition();
+  _rail->resetPosition();
+  // delay(3000);
+  // _arm->moveToAngle(90);
+  // delay(3000);
+  // _arm->moveToAngle(45);
+  // delay(3000);
+  // _arm->moveToAngle(90);
+  // delay(3000);
+  // _rail->moveToPosition(50);
+  // delay(3000);
+  // _rail->moveToPosition(100);
+  // delay(3000);
+  // _rail->moveToPosition(50);
+}
 //////////////////////////////////////////////////////////
 

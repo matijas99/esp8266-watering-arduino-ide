@@ -265,7 +265,6 @@ AccelStepper::AccelStepper(void (*forward)(), void (*backward)())
 
 void AccelStepper::setMaxSpeed(float speed)
 {
-  Serial.println("AccelStepper :: setMaxSpeed");
     if (speed < 0.0)
        speed = -speed;
     if (_maxSpeed != speed)
@@ -288,7 +287,6 @@ float   AccelStepper::maxSpeed()
 
 void AccelStepper::setAcceleration(float acceleration)
 {
-  Serial.println("AccelStepper :: setAcceleration");
     if (acceleration == 0.0)
 	return;
     if (acceleration < 0.0)
@@ -586,7 +584,6 @@ void    AccelStepper::disableOutputs()
 
 void    AccelStepper::enableOutputs()
 {
-  Serial.println("AccelStepper :: enableOutputs");
   delay(1000);
 
     if (! _interface) 

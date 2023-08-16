@@ -86,48 +86,27 @@ class GenericAccelStepper : public AccelStepper {
 //////////////////////////////////////////////////////////
 
 
-// //////////////////////////////////////////////////////////
-// // STEPPER
-// //////////////////////////////////////////////////////////
-// class Stepper {
-//   public:
-//     static const int stepperFullRotationSteps = 200;
+//////////////////////////////////////////////////////////
+// STEPPER
+//////////////////////////////////////////////////////////
+class Stepper {
+  public:
+    static const int stepperFullRotationSteps = 200;
 
-//     Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin);
-//     void move(long position);
+    Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin, int microStepsPerStep = 1);
+    void move(long position);
+    void setMaxSpeed(float speed);
+    void setAcceleration(float acceleration);
+    void moveToPosition(long steps);
+    void moveRelative(long steps);
+    void setCurrentPosition(long position);
 
-//   private:
-//     Pin* _pins[3];
-//     GenericAccelStepper* _accelStepper;
-// };
-// //////////////////////////////////////////////////////////
-
-
-// //////////////////////////////////////////////////////////
-// // STEPPER
-// //////////////////////////////////////////////////////////
-// class OldStepper : public Component {
-//   public:
-//     static const int stepperFullRotationSteps = 200;
-//     static const int stepDelayMicroSeconds = 1000;
-
-//     Stepper(String name, Pin* enablePin,  Pin* stepPin, Pin* directionPin);
-
-//     void turnForwardSteps(int steps);
-//     void turnBackwardSteps(int steps);
-//     void resetPosition();
-//     String toString();
-
-//   private:
-//     Pin* _enablePin;
-//     Pin* _directionPin;
-//     Pin* _stepPin;
-//     int _currentPositionSteps;
-//     AccelStepper* _accelStepper;    
-
-//     void _turnSteps(int steps);
-// };
-// //////////////////////////////////////////////////////////
+  private:
+    Pin* _enablePin;
+    int _microStepsPerStep;
+    GenericAccelStepper* _accelStepper;
+};
+//////////////////////////////////////////////////////////
 
 
 #endif

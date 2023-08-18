@@ -1,10 +1,10 @@
 #include "basicHardware.h"
-// #include "wateringHardware.h"
+#include "wateringHardware.h"
 
 // MCP_23017* _mcp;
 // Switch* button;
 // Pin* pin;
-// Waterman* waterman;
+Waterman* waterman;
 
 void setup() {
   Serial.begin(115200);

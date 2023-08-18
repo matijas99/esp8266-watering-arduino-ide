@@ -108,7 +108,7 @@ Waterman :: Waterman() {
 }
 
 void Waterman :: resetPosition() {
-  int delayMs = 3000;
+  int delayMs = 0;
   _arm->resetPosition();
   delay(delayMs);
   _rail->resetPosition();
@@ -127,7 +127,9 @@ void Waterman :: resetPosition() {
   delay(delayMs);
   _rail->moveToPosition(0);
   delay(delayMs);
-  _rail->moveToPosition(350);
+  _rail->moveToPosition(300);
+  delay(delayMs);
+  _rail->moveToPosition(20);
 }
 //////////////////////////////////////////////////////////
 

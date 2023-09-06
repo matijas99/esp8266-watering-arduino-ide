@@ -16,17 +16,18 @@ Arm :: Arm(Stepper* rotationStepper, Switch* rotationLimit) {
 }
 
 void Arm :: moveToAngle(int newAngleDegrees) {
-  if (newAngleDegrees < 0) {
-    newAngleDegrees = 0;
-  } else if (newAngleDegrees > Arm::maxAngleDegrees) {
-    newAngleDegrees = Arm::maxAngleDegrees;
+  if (abs(newAngleDegrees) > Arm::maxAngleDegrees) {
+    if (newAngleDegrees < 0) {
+      newAngleDegrees = -1 * Arm::maxAngleDegrees;
+    } else {
+      newAngleDegrees = Arm::maxAngleDegrees;
+    }
   }
 
   int angleDiff = newAngleDegrees - _currentAngleDegrees;
   int stepsDiff = angleDiff * _stepsPerDegree;
 
-  _rotationStepper->moveRelative(stepsDiff);
-  
+  _rotationStepper->moveRelative(-1 * stepsDiff);
   _currentAngleDegrees = newAngleDegrees;
 }
 
@@ -34,6 +35,8 @@ void Arm :: resetPosition() {
   while (!_rotationLimit->isPressed()) {
     _rotationStepper->moveRelative(-1);
   }
+  _currentAngleDegrees = 0;
+  moveToAngle(Arm::maxAngleDegrees * -1);
   _currentAngleDegrees = 0;
   _rotationStepper->setCurrentPosition(0);
 }
@@ -73,7 +76,6 @@ void Rail :: resetPosition() {
   _currentPositionMillimeters = 0;
   _positionStepper->setCurrentPosition(0);
 }
-
 //////////////////////////////////////////////////////////
 
 
@@ -85,8 +87,6 @@ Waterman :: Waterman() {
   _mcp = new MCP_23017();
   _mcp->begin();
   Wire.setClock(400000);
-
-  delay(1000);
 
   Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
   Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
@@ -108,28 +108,42 @@ Waterman :: Waterman() {
 }
 
 void Waterman :: resetPosition() {
-  int delayMs = 0;
   _arm->resetPosition();
-  delay(delayMs);
   _rail->resetPosition();
-  delay(delayMs);
-  _arm->moveToAngle(90);
-  delay(delayMs);
-  _arm->moveToAngle(0);
-  delay(delayMs);
-  _arm->moveToAngle(200);
-  delay(delayMs);
-  _arm->moveToAngle(45);
-  delay(delayMs);
-  _rail->moveToPosition(50);
-  delay(delayMs);
-  _rail->moveToPosition(100);
-  delay(delayMs);
-  _rail->moveToPosition(0);
-  delay(delayMs);
-  _rail->moveToPosition(300);
-  delay(delayMs);
-  _rail->moveToPosition(20);
+
+  // _arm->moveToAngle(90);
+  // _arm->moveToAngle(0);
+  // _arm->moveToAngle(200);
+  // _arm->moveToAngle(45);
+  // _rail->moveToPosition(50);
+  // _rail->moveToPosition(100);
+  // _rail->moveToPosition(0);
+  // _rail->moveToPosition(300);
+  // _rail->moveToPosition(20);
+
+  _moveToCoordinates({ 200, 600 });
+  _moveToCoordinates({ 0, 800 });
+  _moveToCoordinates({ -400, 250 });
+  _moveToCoordinates({ 200, 600 });
+  _moveToCoordinates({ -300, 400 });
+
+  _moveToCoordinates({ 500, 50 });
+
+  _moveToCoordinates({ 0, 550 });
+}
+
+void Waterman :: _moveToCoordinates(Coordinates coordinates) {
+  float armAngleRadians = asin(float(abs(coordinates.x)) / float(Arm::lengthMillimeters));
+  float armAngleDegrees = (armAngleRadians * 4068) / 71;
+  _arm->moveToAngle(armAngleDegrees);
+
+  float yArmLengthMillimeters = sqrt(float(Arm::lengthMillimeters * Arm::lengthMillimeters - coordinates.x * coordinates.x));
+  long yRailPosition = coordinates.y - long(yArmLengthMillimeters);
+  _rail->moveToPosition(yRailPosition);
+
+  Serial.println("_moveToCoordinates");
+  Serial.println(armAngleDegrees);
+  Serial.println(yRailPosition);
 }
 //////////////////////////////////////////////////////////
 

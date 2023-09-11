@@ -12,18 +12,19 @@ class Arm {
   public:
     static const int lengthMillimeters = 500;
     static constexpr float beltRatio = 1.0 / 3.0;
-    static const int maxAngleDegrees = 177;
+    static constexpr float maxAngleDegrees = 173.0;
 
     Arm(Stepper* rotationStepper, Switch* rotationLimit);
 
-    void moveToAngle(int newAngleDegrees);
+    void moveToAngle(float newAngleDegrees);
     void resetPosition();
 
   private:
+    static constexpr float _zeroPositionDegrees = 176.0;
     Stepper* _rotationStepper;
     Switch* _rotationLimit;
-    int _stepsPerDegree;
-    int _currentAngleDegrees;
+    float _stepsPerDegree;
+    float _currentAngleDegrees;
 };
 //////////////////////////////////////////////////////////
 
@@ -35,6 +36,7 @@ class Rail {
 public:
     static const int lengthMillimeters = 1500;
     static const int pulleyTeeth = 20;
+    static const int zeroPositionMillimeters = 100;
 
     Rail(Stepper* positionStepper, Switch* positionLimit);
 

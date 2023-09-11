@@ -137,7 +137,7 @@ void GenericAccelStepper :: _pinMode(uint8_t pin, uint8_t value) {
 //////////////////////////////////////////////////////////
 // STEPPER
 //////////////////////////////////////////////////////////
-Stepper :: Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin, int microStepsPerStep) {
+Stepper :: Stepper(Pin* enablePin, Pin* stepPin, Pin* directionPin, int microStepsPerStep) {
   _microStepsPerStep = microStepsPerStep;
   _enablePin = enablePin;
   _enablePin->setPinMode(OUTPUT);
@@ -145,8 +145,8 @@ Stepper :: Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin, int microSt
 
   _accelStepper = new GenericAccelStepper(AccelStepper::DRIVER, stepPin, directionPin);
   _accelStepper->setPinsInverted(true, false, false);
-  setMaxSpeed(2000.0);
-  setAcceleration(200.0);
+  setMaxSpeed(1000.0);
+  setAcceleration(70.0);
   setCurrentPosition(0);
 }
 

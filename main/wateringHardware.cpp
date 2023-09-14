@@ -85,7 +85,6 @@ Waterman :: Waterman() {
   
   _mcp = new MCP_23017();
   _mcp->begin();
-  Wire.setClock(400000);
 
   Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
   Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
@@ -104,6 +103,9 @@ Waterman :: Waterman() {
   Pin* pinRotationLimit = new PinExtender(_mcp, GPA3);
   Switch* rotationLimit = new Switch(pinRotationLimit);
   _arm = new Arm(rotationStepper, rotationLimit);
+
+  Pin* pinPumpRelay = new PinExtender(_mcp, GPA4);
+  _pumpRelay = new Relay(pinPumpRelay);
 }
 
 void Waterman :: resetPosition() {
@@ -139,9 +141,14 @@ void Waterman :: resetPosition() {
   // _moveToCoordinates({ 0, 550 });
 }
 
-void Waterman :: _moveToCoordinates(Coordinates coordinates) {
-  float armAngleRadians = asin(float(abs(coordinates.x)) / float(Arm::lengthMillimeters));
+bool Waterman :: _moveToCoordinates(Coordinates coordinates) {
+  float armAngleRadians = asin(float(coordinates.x) / float(Arm::lengthMillimeters));
   float armAngleDegrees = (armAngleRadians * 4068) / 71;
+  if (coordinates.x == 0) {
+    armAngleDegrees = 0;
+  } else if (coordinates.x > Arm::lengthMillimeters) {
+    return false;
+  }
 
   float yArmLengthMillimeters = sqrt(float(Arm::lengthMillimeters * Arm::lengthMillimeters - coordinates.x * coordinates.x));
   long yRailPosition = coordinates.y - long(yArmLengthMillimeters);
@@ -155,12 +162,58 @@ void Waterman :: _moveToCoordinates(Coordinates coordinates) {
     }
   }
 
-  _arm->moveToAngle(armAngleDegrees);
-  _rail->moveToPosition(yRailPosition);
+  if (yRailPosition > Rail::lengthMillimeters) {
+    return false;
+  } else if (abs(armAngleDegrees) > Arm::maxAngleDegrees) {
+    return false;
+  }
 
-  Serial.println("_moveToCoordinates");
-  Serial.println(armAngleDegrees);
-  Serial.println(yRailPosition);
+  _arm->moveToAngle(0);
+  _rail->moveToPosition(yRailPosition);
+  _arm->moveToAngle(armAngleDegrees);
+
+  return true;
+}
+
+void Waterman :: _pumpWater(Thirstiness thirstiness) {
+  Serial.println("_pumpWater");
+  int pumpRuntimeMs = 0;
+  switch (thirstiness) {
+    case Thirstiness::HIGH_THIRST:
+      pumpRuntimeMs = 5000;
+      break;
+    case Thirstiness::MEDIUM_THIRST:
+      pumpRuntimeMs = 3000;
+      break;
+    case Thirstiness::LOW_THIRST:
+      pumpRuntimeMs = 1000;
+      break;
+  }
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  // _pumpRelay->turnOn()
+  delay(pumpRuntimeMs);
+  // _pumpRelay->turnOff()
+
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  delay(Waterman::pumpDropDelayMs);
+}
+
+void Waterman :: _waterPlant(Plant plant) {
+  if (_moveToCoordinates(plant.coordinatesMillimeters)) {
+    _pumpWater(plant.thirstiness);
+  }
+}
+
+void Waterman :: waterPlants(Plant plants[], int plantsCount) {
+  for (int i = 0; i < plantsCount; i++) {
+    _waterPlant(plants[i]);
+  }
+  _arm->moveToAngle(0);
+  _rail->moveToPosition(Rail::zeroPositionMillimeters);
+  _arm->moveToAngle(Arm::maxAngleDegrees);
 }
 //////////////////////////////////////////////////////////
 

@@ -6,35 +6,15 @@
 // Pin* pin;
 Waterman* waterman;
 
+Plant plants[] = {
+  { { 200, 660 }, Thirstiness::LOW_THIRST },
+  { { -200, 700 }, Thirstiness::HIGH_THIRST },
+  { { 0, 850 }, Thirstiness::MEDIUM_THIRST }
+};
+
 void setup() {
   Serial.begin(115200);
-
-  // MCP_23017* _mcp = new MCP_23017();
-  // _mcp->begin();
-  // Wire.setClock(400000);
-
-  // delay(3000);
-
-  // Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
-  // Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
-  // Pin* pinDirectionPositionStepper = new PinExtender(_mcp, GPB2);
-
-  // pinEnablePositionStepper->setPinMode(OUTPUT);
-  // pinEnablePositionStepper->doDigitalWrite(LOW);
-  // delay(1000);
-  // GenericAccelStepper* _stepper = new GenericAccelStepper(AccelStepper::DRIVER, pinStepPositionStepper, pinDirectionPositionStepper);
-  // _stepper->setMaxSpeed(2000.0);
-  // _stepper->setAcceleration(150.0);
-  // _stepper->setPinsInverted(false, true, false);
-  // _stepper->runToNewPosition(1500);
-
-  // Stepper* _stepper = new Stepper(pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper, 2);
-  // _stepper->move(1500);
-  // _stepper->move(-1500);
-
-
-  // mcp = new MCP_23017();
-  // mcp->begin();
+  Wire.setClock(400000);
 
   // pin = new PinExtender(mcp, GPA3);
   // // pin = new PinNative(D6);
@@ -45,6 +25,8 @@ void setup() {
 
   waterman = new Waterman();
   waterman->resetPosition();
+  delay(1000);
+  waterman->waterPlants(plants, 3);
 
 
 }

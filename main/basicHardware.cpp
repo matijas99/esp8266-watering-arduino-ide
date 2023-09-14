@@ -184,3 +184,22 @@ void Stepper :: setCurrentPosition(long position) {
 //////////////////////////////////////////////////////////
 
 
+//////////////////////////////////////////////////////////
+// RELAY
+//////////////////////////////////////////////////////////
+Relay :: Relay(Pin* controlPin) {
+  _controlPin = controlPin;
+  _controlPin->setPinMode(OUTPUT);
+  _controlPin->doDigitalWrite(LOW);
+}
+
+void Relay :: turnOn() {
+  _controlPin->doDigitalWrite(HIGH);
+}
+
+void Relay :: turnOff() {
+  _controlPin->doDigitalWrite(LOW);
+}
+//////////////////////////////////////////////////////////
+
+

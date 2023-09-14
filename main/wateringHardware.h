@@ -36,7 +36,7 @@ class Rail {
 public:
     static const int lengthMillimeters = 1500;
     static const int pulleyTeeth = 20;
-    static const int zeroPositionMillimeters = 100;
+    static const int zeroPositionMillimeters = 150;
 
     Rail(Stepper* positionStepper, Switch* positionLimit);
 
@@ -88,15 +88,21 @@ struct Plant {
 //////////////////////////////////////////////////////////
 class Waterman {
   public:
+    static const int pumpDropDelayMs = 2000;
+
     Waterman();
     
     void resetPosition();
+    void waterPlants(Plant plants[], int plantsCount);
   
   private:
     MCP_23017* _mcp;
     Rail* _rail;
     Arm* _arm;
-    void _moveToCoordinates(Coordinates coordinates);
+    Relay* _pumpRelay;
+    bool _moveToCoordinates(Coordinates coordinates);
+    void _pumpWater(Thirstiness thirstiness);
+    void _waterPlant(Plant plant);
 
 };
 //////////////////////////////////////////////////////////

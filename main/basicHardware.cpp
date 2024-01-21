@@ -137,49 +137,58 @@ void GenericAccelStepper :: _pinMode(uint8_t pin, uint8_t value) {
 //////////////////////////////////////////////////////////
 // STEPPER
 //////////////////////////////////////////////////////////
-Stepper :: Stepper(Pin* enablePin, Pin* stepPin, Pin* directionPin, int microStepsPerStep) {
+Stepper :: Stepper(Pin* enablePin, Pin* stepPin, Pin* directionPin, int microStepsPerStep, float maxSpeed, float maxAcceleration) {
   _microStepsPerStep = microStepsPerStep;
   _enablePin = enablePin;
   _enablePin->setPinMode(OUTPUT);
-  _enablePin->doDigitalWrite(LOW);
 
   _accelStepper = new GenericAccelStepper(AccelStepper::DRIVER, stepPin, directionPin);
   _accelStepper->setPinsInverted(true, false, false);
-  setMaxSpeed(1000.0);
-  setAcceleration(70.0);
+  setMaxSpeed(maxSpeed);
+  setAcceleration(maxAcceleration);
   setCurrentPosition(0);
 }
 
+void Stepper :: on() {
+  _enablePin->doDigitalWrite(LOW);
+}
+
+void Stepper :: off() {
+  _enablePin->doDigitalWrite(HIGH);
+}
+
 void Stepper :: setMaxSpeed(float speed) {
-  float microStepsSpeed = (float)(speed * _microStepsPerStep);
-  _accelStepper->setMaxSpeed(microStepsSpeed);
+  _accelStepper->setMaxSpeed(speed);
 }
 
 void Stepper :: setAcceleration(float acceleration) {
-  float microStepsAcceleration = (float)(acceleration * _microStepsPerStep);
-  _accelStepper->setAcceleration(microStepsAcceleration);
+  _accelStepper->setAcceleration(acceleration);
 }
 
 void Stepper :: move(long steps) {
-  long microSteps = (long)(steps * _microStepsPerStep);
-  _accelStepper->move(microSteps);
+  _accelStepper->move(steps);
   _accelStepper->run();
 }
 
 void Stepper :: moveToPosition(long steps) {
-  long microSteps = (long)(steps * _microStepsPerStep);
-  _accelStepper->runToNewPosition(microSteps);
+  _accelStepper->runToNewPosition(steps);
 }
 
 void Stepper :: moveRelative(long steps) {
-  long microSteps = (long)(steps * _microStepsPerStep);
-  _accelStepper->move(microSteps);
+  _accelStepper->move(steps);
   _accelStepper->runToPosition();
 }
 
-void Stepper :: setCurrentPosition(long position) {
-  long microStepsPosition = (long)(position * _microStepsPerStep);
-  _accelStepper->setCurrentPosition(microStepsPosition);
+void Stepper :: setCurrentPosition(long positionSteps) {
+  _accelStepper->setCurrentPosition(positionSteps);
+}
+
+long Stepper :: getStepsPerRotation() {
+  return (long)(_stepperFullRotationSteps * _microStepsPerStep);
+}
+
+float Stepper :: getStepsPerDegree() {
+  return (float)(getStepsPerRotation()) / 360.0;
 }
 //////////////////////////////////////////////////////////
 

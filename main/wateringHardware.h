@@ -4,18 +4,21 @@
 #include <Arduino.h>
 #include "MCP23017-SOLDERED.h"
 #include "basicHardware.h"
+#include "LiquidCrystal_I2C.h"
 
 //////////////////////////////////////////////////////////
 // ARM
 //////////////////////////////////////////////////////////
 class Arm {
   public:
-    static const int lengthMillimeters = 500;
+    static const int lengthMillimeters = 515;
     static constexpr float beltRatio = 1.0 / 3.0;
-    static constexpr float maxAngleDegrees = 173.0;
+    static constexpr int maxAngleDegrees = 173;
 
     Arm(Stepper* rotationStepper, Switch* rotationLimit);
 
+    void on();
+    void off();
     void moveToAngle(float newAngleDegrees);
     void resetPosition();
 
@@ -34,20 +37,22 @@ class Arm {
 //////////////////////////////////////////////////////////
 class Rail {
 public:
-    static const int lengthMillimeters = 1500;
+    static const int lengthMillimeters = 1000;
     static const int pulleyTeeth = 20;
-    static const int zeroPositionMillimeters = 150;
+    static const int zeroPositionMillimeters = 115;
 
     Rail(Stepper* positionStepper, Switch* positionLimit);
 
-    void moveToPosition(int newPositionMillimeters);
+    void on();
+    void off();
+    void moveToPosition(float newPositionMillimeters);
     void resetPosition();
   
   private:
     Stepper* _positionStepper;
     Switch* _positionLimit;
-    int _stepsPerMillimeter;
-    int _currentPositionMillimeters;
+    float _stepsPerMillimeter;
+    float _currentPositionMillimeters;
 };
 //////////////////////////////////////////////////////////
 
@@ -56,8 +61,8 @@ public:
 // COORDINATE
 //////////////////////////////////////////////////////////
 struct Coordinates {
-  long x;
-  long y;
+  int x;
+  int y;
 };
 //////////////////////////////////////////////////////////
 
@@ -100,6 +105,7 @@ class Waterman {
     Rail* _rail;
     Arm* _arm;
     Relay* _pumpRelay;
+    LiquidCrystal_I2C* _lcd;
     bool _moveToCoordinates(Coordinates coordinates);
     void _pumpWater(Thirstiness thirstiness);
     void _waterPlant(Plant plant);

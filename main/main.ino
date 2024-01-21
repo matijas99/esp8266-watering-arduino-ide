@@ -7,9 +7,10 @@
 Waterman* waterman;
 
 Plant plants[] = {
-  { { 200, 660 }, Thirstiness::LOW_THIRST },
-  { { -200, 700 }, Thirstiness::HIGH_THIRST },
-  { { 0, 850 }, Thirstiness::MEDIUM_THIRST }
+  { { -200, 0 }, Thirstiness::HIGH_THIRST },
+  { { -310, 290 }, Thirstiness::HIGH_THIRST },
+  { { 230, 840 }, Thirstiness::LOW_THIRST },
+  { { -290, 880 }, Thirstiness::MEDIUM_THIRST }
 };
 
 void setup() {
@@ -26,7 +27,7 @@ void setup() {
   waterman = new Waterman();
   waterman->resetPosition();
   delay(1000);
-  waterman->waterPlants(plants, 3);
+  waterman->waterPlants(plants, 5);
 
 
 }

@@ -91,20 +91,23 @@ class GenericAccelStepper : public AccelStepper {
 //////////////////////////////////////////////////////////
 class Stepper {
   public:
-    static const int stepperFullRotationSteps = 200;
-
-    Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin, int microStepsPerStep = 1);
+    Stepper(Pin* enablePin,  Pin* stepPin, Pin* directionPin, int microStepsPerStep = 1, float maxSpeed = 500, float maxAcceleration = 50);
+    void on();
+    void off();
     void move(long position);
     void setMaxSpeed(float speed);
     void setAcceleration(float acceleration);
     void moveToPosition(long steps);
     void moveRelative(long steps);
-    void setCurrentPosition(long position);
+    void setCurrentPosition(long positionSteps);
+    long getStepsPerRotation();
+    float getStepsPerDegree();
 
   private:
     Pin* _enablePin;
     int _microStepsPerStep;
     GenericAccelStepper* _accelStepper;
+    const int _stepperFullRotationSteps = 200;
 };
 //////////////////////////////////////////////////////////
 
@@ -114,8 +117,6 @@ class Stepper {
 //////////////////////////////////////////////////////////
 class Relay {
   public:
-    static const int stepperFullRotationSteps = 200;
-
     Relay(Pin* controlPin);
     void turnOn();
     void turnOff();

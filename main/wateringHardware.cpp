@@ -2,6 +2,7 @@
 #include "MCP23017-SOLDERED.h"
 #include "wateringHardware.h"
 #include "basicHardware.h"
+#include "LiquidCrystal_I2C.h"
 
 
 //////////////////////////////////////////////////////////
@@ -9,31 +10,45 @@
 //////////////////////////////////////////////////////////
 Arm :: Arm(Stepper* rotationStepper, Switch* rotationLimit) {
   _rotationStepper = rotationStepper;
+  _rotationStepper->setMaxSpeed(500.0);
+  _rotationStepper->setAcceleration(40.0);
   _rotationLimit = rotationLimit;
-  float fullRotationSteps = float(Stepper::stepperFullRotationSteps) / beltRatio;
+  float fullRotationSteps = _rotationStepper->getStepsPerRotation() / beltRatio;
   _stepsPerDegree = fullRotationSteps / 360.0;
   _currentAngleDegrees = 0;
 }
 
+void Arm :: on() {
+  _rotationStepper->on();
+}
+
+void Arm :: off() {
+  _rotationStepper->off();
+}
+
 void Arm :: moveToAngle(float newAngleDegrees) {
-  if (abs(newAngleDegrees) > Arm::maxAngleDegrees) {
-    if (newAngleDegrees < 0) {
-      newAngleDegrees = -1 * Arm::maxAngleDegrees;
+  if (abs(newAngleDegrees) > (float)Arm::maxAngleDegrees) {
+    if (newAngleDegrees < 0.0) {
+      newAngleDegrees = (float)(-1 * Arm::maxAngleDegrees);
     } else {
-      newAngleDegrees = Arm::maxAngleDegrees;
+      newAngleDegrees = (float)Arm::maxAngleDegrees;
     }
   }
 
-  int angleDiff = newAngleDegrees - _currentAngleDegrees;
-  int stepsDiff = angleDiff * _stepsPerDegree;
+  float angleDiff = newAngleDegrees - _currentAngleDegrees;
+  long stepsDiff = (long)(angleDiff * _stepsPerDegree);
 
-  _rotationStepper->moveRelative(-1 * int(stepsDiff));
+  // correction for rounding between float degrees and long microsteps
+  angleDiff = stepsDiff / _stepsPerDegree;
+  newAngleDegrees = angleDiff + _currentAngleDegrees;
+
+  _rotationStepper->moveRelative(-1 * stepsDiff);
   _currentAngleDegrees = newAngleDegrees;
 }
 
 void Arm :: resetPosition() {
   while (!_rotationLimit->isPressed()) {
-    _rotationStepper->moveRelative(-1);
+    _rotationStepper->moveRelative(-4);
   }
   _currentAngleDegrees = Arm::_zeroPositionDegrees;
   moveToAngle(0.0);
@@ -47,21 +62,35 @@ void Arm :: resetPosition() {
 //////////////////////////////////////////////////////////
 Rail :: Rail(Stepper* positionStepper, Switch* positionLimit) {
   int pulleyMillimetersPerRotation = 2 * pulleyTeeth;
-  _stepsPerMillimeter = Stepper::stepperFullRotationSteps / pulleyMillimetersPerRotation;
+  _stepsPerMillimeter = _positionStepper->getStepsPerRotation() / pulleyMillimetersPerRotation;
   _currentPositionMillimeters = 0;
   _positionStepper = positionStepper;
+  _positionStepper->setMaxSpeed(700.0);
+  _positionStepper->setAcceleration(70.0);
   _positionLimit = positionLimit;
 }
 
-void Rail :: moveToPosition(int newPositionMillimeters) {
-  if (newPositionMillimeters < 0) {
-    newPositionMillimeters = 0;
-  } else if (newPositionMillimeters > lengthMillimeters) {
-    newPositionMillimeters = lengthMillimeters;
+void Rail :: on() {
+  _positionStepper->on();
+}
+
+void Rail :: off() {
+  _positionStepper->off();
+}
+
+void Rail :: moveToPosition(float newPositionMillimeters) {
+  if (newPositionMillimeters < 0.0) {
+    newPositionMillimeters = 0.0;
+  } else if (newPositionMillimeters > (float)lengthMillimeters) {
+    newPositionMillimeters = (float)lengthMillimeters;
   }
 
-  int positionMillimetersDiff = newPositionMillimeters - _currentPositionMillimeters;
-  int stepsDiff = positionMillimetersDiff * _stepsPerMillimeter;
+  float positionMillimetersDiff = newPositionMillimeters - _currentPositionMillimeters;
+  long stepsDiff = (long)(positionMillimetersDiff * _stepsPerMillimeter);
+
+  // correction for rounding between float degrees and long microsteps
+  positionMillimetersDiff = stepsDiff / _stepsPerMillimeter;
+  newPositionMillimeters = positionMillimetersDiff + _currentPositionMillimeters;
 
   _positionStepper->moveRelative(stepsDiff);
   
@@ -70,7 +99,7 @@ void Rail :: moveToPosition(int newPositionMillimeters) {
 
 void Rail :: resetPosition() {
   while (!_positionLimit->isPressed()) {
-    _positionStepper->moveRelative(-1);
+    _positionStepper->moveRelative(-8);
   }
   _currentPositionMillimeters = Rail::zeroPositionMillimeters;
   _positionStepper->setCurrentPosition(0);
@@ -89,7 +118,7 @@ Waterman :: Waterman() {
   Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
   Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
   Pin* pinDirectionPositionStepper = new PinExtender(_mcp, GPB2);
-  Stepper* positionStepper = new Stepper(pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper, 1);
+  Stepper* positionStepper = new Stepper(pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper, 8);
   
   Pin* pinPositionLimit = new PinExtender(_mcp, GPB3);
   Switch* positionLimit = new Switch(pinPositionLimit);
@@ -98,7 +127,7 @@ Waterman :: Waterman() {
   Pin* pinEnableRotationStepper = new PinExtender(_mcp, GPA0);
   Pin* pinStepRotationStepper = new PinExtender(_mcp, GPA1);
   Pin* pinDirectionRotationStepper = new PinExtender(_mcp, GPA2);
-  Stepper* rotationStepper = new Stepper(pinEnableRotationStepper, pinStepRotationStepper, pinDirectionRotationStepper, 2);
+  Stepper* rotationStepper = new Stepper(pinEnableRotationStepper, pinStepRotationStepper, pinDirectionRotationStepper, 8);
 
   Pin* pinRotationLimit = new PinExtender(_mcp, GPA3);
   Switch* rotationLimit = new Switch(pinRotationLimit);
@@ -106,11 +135,22 @@ Waterman :: Waterman() {
 
   Pin* pinPumpRelay = new PinExtender(_mcp, GPA4);
   _pumpRelay = new Relay(pinPumpRelay);
+
+  _lcd = new LiquidCrystal_I2C(0x26, 16, 2); 
+  _lcd->init();
+  _lcd->backlight();
 }
 
 void Waterman :: resetPosition() {
+  _lcd->clear();
+  _lcd->setCursor(0, 0);
+  _lcd->print("Resetting...");
+  _lcd->setCursor(0, 1);
+  _lcd->print("Arm ");
   _arm->resetPosition();
+  _lcd->print("OK, Rail ");
   _rail->resetPosition();
+  _lcd->print("OK");
 
   // delay(2000);
   // _arm->moveToAngle(-200.0);
@@ -142,16 +182,22 @@ void Waterman :: resetPosition() {
 }
 
 bool Waterman :: _moveToCoordinates(Coordinates coordinates) {
+  _lcd->clear();
+  _lcd->setCursor(0, 0);
+  
   float armAngleRadians = asin(float(coordinates.x) / float(Arm::lengthMillimeters));
-  float armAngleDegrees = (armAngleRadians * 4068) / 71;
+  float armAngleDegrees = (armAngleRadians * 4068.0) / 71.0;
   if (coordinates.x == 0) {
-    armAngleDegrees = 0;
+    armAngleDegrees = 0.0;
   } else if (coordinates.x > Arm::lengthMillimeters) {
+    _lcd->print("Err X: " + String(coordinates.x));
+    _lcd->setCursor(0, 1);
+    _lcd->print("X: " + String(coordinates.x) + " Y: " + String(coordinates.y));
     return false;
   }
 
   float yArmLengthMillimeters = sqrt(float(Arm::lengthMillimeters * Arm::lengthMillimeters - coordinates.x * coordinates.x));
-  long yRailPosition = coordinates.y - long(yArmLengthMillimeters);
+  float yRailPosition = (float)coordinates.y - yArmLengthMillimeters;
 
   if (coordinates.y < (Rail::zeroPositionMillimeters + Arm::lengthMillimeters)) {
     yRailPosition += 2 * yArmLengthMillimeters;
@@ -162,11 +208,21 @@ bool Waterman :: _moveToCoordinates(Coordinates coordinates) {
     }
   }
 
-  if (yRailPosition > Rail::lengthMillimeters) {
+  if (yRailPosition > (float)Rail::lengthMillimeters) {
+    _lcd->print("Err Y: " + String(yRailPosition));
+    _lcd->setCursor(0, 1);
+    _lcd->print("X: " + String(coordinates.x) + " Y: " + String(coordinates.y));
     return false;
-  } else if (abs(armAngleDegrees) > Arm::maxAngleDegrees) {
+  } else if (abs(armAngleDegrees) > (float)Arm::maxAngleDegrees) {
+    _lcd->print("Err angle: " + String(abs(armAngleDegrees)));
+    _lcd->setCursor(0, 1);
+    _lcd->print("X: " + String(coordinates.x) + " Y: " + String(coordinates.y));
     return false;
   }
+
+  _lcd->print("Moving...");
+  _lcd->setCursor(0, 1);
+  _lcd->print("X: " + String(coordinates.x) + " Y: " + String(coordinates.y));
 
   _arm->moveToAngle(0);
   _rail->moveToPosition(yRailPosition);
@@ -176,25 +232,35 @@ bool Waterman :: _moveToCoordinates(Coordinates coordinates) {
 }
 
 void Waterman :: _pumpWater(Thirstiness thirstiness) {
-  Serial.println("_pumpWater");
   int pumpRuntimeMs = 0;
   switch (thirstiness) {
     case Thirstiness::HIGH_THIRST:
-      pumpRuntimeMs = 5000;
+      pumpRuntimeMs = 7000;
       break;
     case Thirstiness::MEDIUM_THIRST:
-      pumpRuntimeMs = 3000;
+      pumpRuntimeMs = 5000;
       break;
     case Thirstiness::LOW_THIRST:
-      pumpRuntimeMs = 1000;
+      pumpRuntimeMs = 3000;
       break;
   }
+
+  _lcd->clear();
+  _lcd->setCursor(0, 0);
+  _lcd->print("Pumping water...");
+  _lcd->setCursor(0, 1);
+  _lcd->print("Duration: " + String(pumpRuntimeMs) + "ms");
+
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  // _pumpRelay->turnOn()
+  _arm->off();
+  _rail->off();
+  _pumpRelay->turnOn();
   delay(pumpRuntimeMs);
-  // _pumpRelay->turnOff()
+  _pumpRelay->turnOff();
+  _arm->on();
+  _rail->on();
 
   digitalWrite(LED_BUILTIN, HIGH);
 
@@ -204,6 +270,8 @@ void Waterman :: _pumpWater(Thirstiness thirstiness) {
 void Waterman :: _waterPlant(Plant plant) {
   if (_moveToCoordinates(plant.coordinatesMillimeters)) {
     _pumpWater(plant.thirstiness);
+  } else {
+    delay(5000);
   }
 }
 

@@ -13,9 +13,9 @@ Arm :: Arm(Stepper* rotationStepper, Switch* rotationLimit) {
   _rotationStepper->setMaxSpeed(500.0);
   _rotationStepper->setAcceleration(40.0);
   _rotationLimit = rotationLimit;
-  float fullRotationSteps = _rotationStepper->getStepsPerRotation() / beltRatio;
+  float fullRotationSteps = (float)_rotationStepper->getStepsPerRotation() / beltRatio;
   _stepsPerDegree = fullRotationSteps / 360.0;
-  _currentAngleDegrees = 0;
+  _currentAngleDegrees = 0.0;
 }
 
 void Arm :: on() {
@@ -40,10 +40,11 @@ void Arm :: moveToAngle(float newAngleDegrees) {
 
   // correction for rounding between float degrees and long microsteps
   angleDiff = stepsDiff / _stepsPerDegree;
-  newAngleDegrees = angleDiff + _currentAngleDegrees;
+  float newAngleDegreesCorrected = angleDiff + _currentAngleDegrees;
+  Serial.println("Arm correction: " + String(newAngleDegrees - newAngleDegreesCorrected));
 
   _rotationStepper->moveRelative(-1 * stepsDiff);
-  _currentAngleDegrees = newAngleDegrees;
+  _currentAngleDegrees = newAngleDegreesCorrected;
 }
 
 void Arm :: resetPosition() {
@@ -61,13 +62,14 @@ void Arm :: resetPosition() {
 // RAIL
 //////////////////////////////////////////////////////////
 Rail :: Rail(Stepper* positionStepper, Switch* positionLimit) {
-  int pulleyMillimetersPerRotation = 2 * pulleyTeeth;
-  _stepsPerMillimeter = _positionStepper->getStepsPerRotation() / pulleyMillimetersPerRotation;
-  _currentPositionMillimeters = 0;
   _positionStepper = positionStepper;
   _positionStepper->setMaxSpeed(700.0);
   _positionStepper->setAcceleration(70.0);
   _positionLimit = positionLimit;
+
+  int pulleyMillimetersPerRotation = 2 * pulleyTeeth;
+  _stepsPerMillimeter = (float)_positionStepper->getStepsPerRotation() / (float)pulleyMillimetersPerRotation;
+  _currentPositionMillimeters = 0.0;
 }
 
 void Rail :: on() {
@@ -90,11 +92,12 @@ void Rail :: moveToPosition(float newPositionMillimeters) {
 
   // correction for rounding between float degrees and long microsteps
   positionMillimetersDiff = stepsDiff / _stepsPerMillimeter;
-  newPositionMillimeters = positionMillimetersDiff + _currentPositionMillimeters;
+  float newPositionMillimetersCorrected = positionMillimetersDiff + _currentPositionMillimeters;
+  Serial.println("Rail correction: " + String(newPositionMillimeters - newPositionMillimetersCorrected));
 
   _positionStepper->moveRelative(stepsDiff);
   
-  _currentPositionMillimeters = newPositionMillimeters;
+  _currentPositionMillimeters = newPositionMillimetersCorrected;
 }
 
 void Rail :: resetPosition() {
@@ -175,9 +178,7 @@ void Waterman :: resetPosition() {
   // _moveToCoordinates({ -400, 250 });
   // _moveToCoordinates({ 200, 600 });
   // _moveToCoordinates({ -300, 400 });
-
   // _moveToCoordinates({ 500, 50 });
-
   // _moveToCoordinates({ 0, 550 });
 }
 

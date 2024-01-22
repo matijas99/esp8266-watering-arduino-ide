@@ -5,6 +5,7 @@
 // Switch* button;
 // Pin* pin;
 Waterman* waterman;
+bool didRun = false;
 
 Plant plants[] = {
   { { -200, 0 }, Thirstiness::HIGH_THIRST },
@@ -23,13 +24,7 @@ void setup() {
 
   // pinMode(LED_BUILTIN, OUTPUT);
 
-
   waterman = new Waterman();
-  waterman->resetPosition();
-  delay(1000);
-  waterman->waterPlants(plants, 5);
-
-
 }
 
 // the loop function runs over and over again forever
@@ -40,13 +35,22 @@ void loop() {
   //   Serial.println("off");
   // }
 
-
-
   // if (button->isPressed() == true) {
   //   digitalWrite(LED_BUILTIN, LOW);
   // } else {
   //   digitalWrite(LED_BUILTIN, HIGH);
   // }
-  // waterman->resetPosition();  
-  delay(5000);
+
+  Serial.println("Ready...");
+  delay(1000);
+
+  if (!didRun) {
+    waterman->resetPosition();
+    delay(1000);
+    waterman->waterPlants(plants, 5);
+    didRun = true;
+  } else {
+    Serial.println("Already run, nothing to do");
+  }
+
 }

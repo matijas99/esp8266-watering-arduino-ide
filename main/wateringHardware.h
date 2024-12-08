@@ -23,7 +23,7 @@ class Arm {
     void resetPosition();
 
   private:
-    static constexpr float _zeroPositionDegrees = 176.0;
+    static constexpr float _zeroPositionDegrees = 177.0;
     Stepper* _rotationStepper;
     Switch* _rotationLimit;
     float _stepsPerDegree;
@@ -93,7 +93,7 @@ struct Plant {
 //////////////////////////////////////////////////////////
 class Waterman {
   public:
-    static const int pumpDropDelayMs = 2000;
+    static const int pumpDripDelayMs = 2000;
 
     Waterman();
     

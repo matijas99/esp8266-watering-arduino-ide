@@ -8,10 +8,12 @@ Waterman* waterman;
 bool didRun = false;
 
 Plant plants[] = {
-  { { -200, 0 }, Thirstiness::HIGH_THIRST },
-  { { -310, 290 }, Thirstiness::HIGH_THIRST },
-  { { 230, 840 }, Thirstiness::LOW_THIRST },
-  { { -290, 880 }, Thirstiness::MEDIUM_THIRST }
+  // upper left
+  { { -220, 780 }, Thirstiness::HIGH_THIRST },
+  // upper right
+  { { 130, 940 }, Thirstiness::LOW_THIRST },
+  // lower left
+  { { -250, 260 }, Thirstiness::MEDIUM_THIRST }
 };
 
 void setup() {
@@ -19,7 +21,7 @@ void setup() {
   Wire.setClock(400000);
 
   // pin = new PinExtender(mcp, GPA3);
-  // // pin = new PinNative(D6);
+  // pin = new PinNative(D6);
   // button = new Switch("button", pin);
 
   // pinMode(LED_BUILTIN, OUTPUT);
@@ -47,7 +49,7 @@ void loop() {
   if (!didRun) {
     waterman->resetPosition();
     delay(1000);
-    waterman->waterPlants(plants, 5);
+    waterman->waterPlants(plants, 3);
     didRun = true;
   } else {
     Serial.println("Already run, nothing to do");

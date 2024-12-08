@@ -10,8 +10,8 @@
 //////////////////////////////////////////////////////////
 Arm :: Arm(Stepper* rotationStepper, Switch* rotationLimit) {
   _rotationStepper = rotationStepper;
-  _rotationStepper->setMaxSpeed(500.0);
-  _rotationStepper->setAcceleration(40.0);
+  _rotationStepper->setMaxSpeed(1000.0); // 500
+  _rotationStepper->setAcceleration(100.0); // 40
   _rotationLimit = rotationLimit;
   float fullRotationSteps = (float)_rotationStepper->getStepsPerRotation() / beltRatio;
   _stepsPerDegree = fullRotationSteps / 360.0;
@@ -43,14 +43,20 @@ void Arm :: moveToAngle(float newAngleDegrees) {
   float newAngleDegreesCorrected = angleDiff + _currentAngleDegrees;
   Serial.println("Arm correction: " + String(newAngleDegrees - newAngleDegreesCorrected));
 
+  on();
   _rotationStepper->moveRelative(-1 * stepsDiff);
+  off();
+
   _currentAngleDegrees = newAngleDegreesCorrected;
 }
 
 void Arm :: resetPosition() {
+  on();
   while (!_rotationLimit->isPressed()) {
     _rotationStepper->moveRelative(-4);
   }
+  off();
+
   _currentAngleDegrees = Arm::_zeroPositionDegrees;
   moveToAngle(0.0);
   _rotationStepper->setCurrentPosition(0);
@@ -63,8 +69,8 @@ void Arm :: resetPosition() {
 //////////////////////////////////////////////////////////
 Rail :: Rail(Stepper* positionStepper, Switch* positionLimit) {
   _positionStepper = positionStepper;
-  _positionStepper->setMaxSpeed(700.0);
-  _positionStepper->setAcceleration(70.0);
+  _positionStepper->setMaxSpeed(1000.0); // 700
+  _positionStepper->setAcceleration(250.0); // 70
   _positionLimit = positionLimit;
 
   int pulleyMillimetersPerRotation = 2 * pulleyTeeth;
@@ -95,15 +101,20 @@ void Rail :: moveToPosition(float newPositionMillimeters) {
   float newPositionMillimetersCorrected = positionMillimetersDiff + _currentPositionMillimeters;
   Serial.println("Rail correction: " + String(newPositionMillimeters - newPositionMillimetersCorrected));
 
+  on();
   _positionStepper->moveRelative(stepsDiff);
+  off();
   
   _currentPositionMillimeters = newPositionMillimetersCorrected;
 }
 
 void Rail :: resetPosition() {
+  on();
   while (!_positionLimit->isPressed()) {
-    _positionStepper->moveRelative(-8);
+    _positionStepper->moveRelative(-4);
   }
+  off();
+
   _currentPositionMillimeters = Rail::zeroPositionMillimeters;
   _positionStepper->setCurrentPosition(0);
 }
@@ -119,18 +130,20 @@ Waterman :: Waterman() {
   _mcp->begin();
 
   Pin* pinEnablePositionStepper = new PinExtender(_mcp, GPB0);
-  Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
+  // Pin* pinStepPositionStepper = new PinExtender(_mcp, GPB1);
+  Pin* pinStepPositionStepper = new PinNative(D6);
   Pin* pinDirectionPositionStepper = new PinExtender(_mcp, GPB2);
-  Stepper* positionStepper = new Stepper(pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper, 8);
+  Stepper* positionStepper = new Stepper(pinEnablePositionStepper, pinStepPositionStepper, pinDirectionPositionStepper, 4);
   
   Pin* pinPositionLimit = new PinExtender(_mcp, GPB3);
   Switch* positionLimit = new Switch(pinPositionLimit);
   _rail = new Rail(positionStepper, positionLimit);
 
   Pin* pinEnableRotationStepper = new PinExtender(_mcp, GPA0);
-  Pin* pinStepRotationStepper = new PinExtender(_mcp, GPA1);
+  // Pin* pinStepRotationStepper = new PinExtender(_mcp, GPA1);
+  Pin* pinStepRotationStepper = new PinNative(D5);
   Pin* pinDirectionRotationStepper = new PinExtender(_mcp, GPA2);
-  Stepper* rotationStepper = new Stepper(pinEnableRotationStepper, pinStepRotationStepper, pinDirectionRotationStepper, 8);
+  Stepper* rotationStepper = new Stepper(pinEnableRotationStepper, pinStepRotationStepper, pinDirectionRotationStepper, 4);
 
   Pin* pinRotationLimit = new PinExtender(_mcp, GPA3);
   Switch* rotationLimit = new Switch(pinRotationLimit);
@@ -160,18 +173,21 @@ void Waterman :: resetPosition() {
   // _arm->moveToAngle(180.0);
   // _arm->moveToAngle(0.0);
   // delay(2000);
-  // _arm->moveToAngle(-45.0);
-  // _arm->moveToAngle(45.0);
-  // _arm->moveToAngle(-170.0);
-  // _arm->moveToAngle(180.0);
+  // _arm->moveToAngle(-90.0);
+  // _arm->moveToAngle(90.0);
+  // _arm->moveToAngle(0.0);
+  // _arm->moveToAngle(-120.0);
+  // _arm->moveToAngle(120.0);
   // _arm->moveToAngle(0.0);
   // delay(2000);
-  // _arm->moveToAngle(170.0);
-  // _rail->moveToPosition(50);
-  // _rail->moveToPosition(100);
-  // _rail->moveToPosition(0);
-  // _rail->moveToPosition(300);
-  // _rail->moveToPosition(20);
+  // _rail->moveToPosition(800);
+  // _rail->moveToPosition(Rail::zeroPositionMillimeters);
+  // _rail->moveToPosition(700);
+  // _rail->moveToPosition(Rail::zeroPositionMillimeters);
+  // _rail->moveToPosition(600);
+  // _rail->moveToPosition(Rail::zeroPositionMillimeters);
+  // _rail->moveToPosition(500);
+  // _rail->moveToPosition(Rail::zeroPositionMillimeters);
 
   // _moveToCoordinates({ 200, 600 });
   // _moveToCoordinates({ 0, 800 });
@@ -180,6 +196,8 @@ void Waterman :: resetPosition() {
   // _moveToCoordinates({ -300, 400 });
   // _moveToCoordinates({ 500, 50 });
   // _moveToCoordinates({ 0, 550 });
+
+  // delay(20000);
 }
 
 bool Waterman :: _moveToCoordinates(Coordinates coordinates) {
@@ -255,17 +273,13 @@ void Waterman :: _pumpWater(Thirstiness thirstiness) {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  _arm->off();
-  _rail->off();
   _pumpRelay->turnOn();
   delay(pumpRuntimeMs);
   _pumpRelay->turnOff();
-  _arm->on();
-  _rail->on();
-
+  
   digitalWrite(LED_BUILTIN, HIGH);
 
-  delay(Waterman::pumpDropDelayMs);
+  delay(Waterman::pumpDripDelayMs);
 }
 
 void Waterman :: _waterPlant(Plant plant) {
